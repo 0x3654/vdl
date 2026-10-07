@@ -25,6 +25,21 @@ accounts.
 - **Redirect-first**: for IP-agnostic CDNs (twimg) the server answers `302` and your phone downloads straight from the CDN — the VPS carries no video bandwidth. IP-bound CDNs (googlevideo, fbcdn) go through cobalt's `/tunnel`.
 - **Multi-account cookie manager in Telegram**: paste cookies to the bot, it stores them (0600), rotates LRU, health-checks on a schedule, and asks you for fresh cookies the moment they expire.
 
+## 🙏 Credits & licensing
+
+**The engine of this project is [cobalt](https://github.com/imputnet/cobalt) by
+[imput](https://github.com/imputnet)** — thank you for the best self-hostable
+media API out there. This repo does not fork or modify it: cobalt runs as an
+unmodified upstream container (`ghcr.io/imputnet/cobalt`), and the small Go
+service around it only resolves links, manages cookies and serves the
+iOS shortcut. cobalt is licensed under **GNU AGPL-3.0** (plain, no additional
+terms); its source always lives upstream. If you like what this stack
+downloads — star cobalt first.
+
+Also standing on the shoulders of:
+- **[fxtwitter / FixTweet](https://github.com/FixTweet/FxTwitter)** — tweet
+  metadata (and NSFW posts) without cookies.
+
 ## ⚙️ How it works
 
 ```
@@ -147,7 +162,23 @@ URL» `https://vdl.example.com/dl?token=<токен>&url=[Shortcut Input]` →
 
 Подробности — в английской части выше (таблицы API и env совпадают).
 
+## 🙏 Благодарности и лицензии
+
+**Движок этого проекта — [cobalt](https://github.com/imputnet/cobalt) от
+[imput](https://github.com/imputnet)** — спасибо за лучший селф-хостед
+медиа-API. Мы не форкаем и не модифицируем его: cobalt работает отдельным
+немодифицированным контейнером (`ghcr.io/imputnet/cobalt`), а наша небольшая
+Go-обвязка только резолвит ссылки, управляет куками и раздаёт iOS-шорткат.
+cobalt под **GNU AGPL-3.0** (чистой, без допусловий), исходники всегда
+лежат апстримом. Понравилось, что качает, — поставь звезду сначала им.
+
+Опираемся также на:
+- **[fxtwitter / FixTweet](https://github.com/FixTweet/FxTwitter)** — метаданные
+  твитов (и NSFW) без кук.
+
+
+
 ## ⚖️ License
 
-MIT © 0x3654. cobalt (AGPL-3.0) используется как отдельный немодифицированный
-контейнер.
+MIT © 0x3654 for this repository's code. cobalt is a separate work under
+GNU AGPL-3.0, used unmodified — see [Credits](#-credits--licensing).
