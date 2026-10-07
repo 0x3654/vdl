@@ -316,6 +316,18 @@ func (b *Bot) savePaste(ctx context.Context, chat int64, site, label, paste stri
 			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}}, false, ""))
 		return
 	}
+	if site == "twitter" {
+		auth, ct0, ok := TwitterAuth(m)
+		if !ok {
+			b.reply(ctx, chat, "Для twitter нужны обе куки: <code>auth_token</code> и <code>ct0</code> "+
+				"(или две голых строки). Вставь ещё раз.")
+			return
+		}
+		m = map[string]string{"auth_token": auth, "ct0": ct0}
+	} else if len(m) < 2 {
+		b.reply(ctx, chat, "Маловато кук для "+html.EscapeString(site)+" — вставь весь Cookie-хедер из DevTools.")
+		return
+	}
 	acc := store.Account{Site: site, Label: label, Cookies: m}
 	if err := b.Store.Upsert(acc); err != nil {
 		b.reply(ctx, chat, "⚠️ не сохранил: "+html.EscapeString(err.Error()))

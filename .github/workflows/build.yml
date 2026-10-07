@@ -3,7 +3,9 @@ name: build
 "on":
   push:
     branches: [main]
-    paths: ['**.go', 'go.mod', 'go.sum', 'internal/**', 'cmd/**', 'Dockerfile', '.dockerignore', '.github/workflows/build.yml']
+    # ровно входы образа: код+embed-шаблон, фикстуры тестов, сам Dockerfile;
+    # README/docs деплой не запускают
+    paths: ['**.go', '**.html', 'go.mod', 'go.sum', 'testdata/**', 'Dockerfile', '.dockerignore', '.github/workflows/build.yml']
     tags: ['v*']
   workflow_dispatch:
 
