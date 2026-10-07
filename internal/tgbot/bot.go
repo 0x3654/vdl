@@ -63,6 +63,18 @@ func New(api *Client, admins []int64, st *store.Store,
 }
 
 // Run — главный цикл; блокирует до отмены ctx.
+// startAdd — выбрали сервис: подсказка + ссылка + ждём куки.
+func (b *Bot) startAdd(ctx context.Context, chat int64, site string) {
+	h := siteHint[site]
+	b.pendingMu.Lock()
+	b.pending[chat] = pendingAdd{site: site, label: b.autoLabel(site), deadline: time.Now().Add(pendingTTL)}
+	b.pendingMu.Unlock()
+	b.reply(ctx, chat, "<b>"+site+"</b> — куки: <code>"+h.need+"</code>\n"+
+		html.EscapeString(h.how)+"\n\nВставь их следующим сообщением.", [][]KbButton{
+		{{Text: "🌐 Открыть " + site, URL: h.url}},
+	})
+}
+
 // sendMenu — меню с кнопками; возвращает id для закрепления.
 func (b *Bot) sendMenu(ctx context.Context, chat int64) {
 	b.reply(ctx, chat, "🎛 <b>vdl — куки</b>", [][]KbButton{
@@ -76,12 +88,8 @@ func (b *Bot) Run(ctx context.Context) {
 	// меню сразу и закреплённым — открывать чат и жать, ничего не печатая
 	mctx, mcancel := context.WithTimeout(ctx, 15*time.Second)
 	for chat := range b.Admins {
-		if mid, err := b.API.SendMessage(mctx, chat, "🎛 <b>vdl — куки</b>", [][]KbButton{
-			{{Text: "🍪 Текущие куки", Data: "list"}},
-			{{Text: "➕ Добавить куки", Data: "add"}},
-		}); err == nil && mid != 0 {
-			_ = b.API.PinMessage(mctx, chat, mid)
-		}
+		_, _ = b.API.SendMessageRaw(mctx, chat, "🎛 <b>vdl — куки</b>",
+			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}, {"🔄 Cobalt"}}, false, "кнопки или куки"))
 	}
 	mcancel()
 	offset := 0
@@ -174,8 +182,23 @@ func (b *Bot) handle(ctx context.Context, u Update) {
 		b.cmdDel(ctx, chat, text)
 	case strings.HasPrefix(text, "/check"):
 		b.cmdCheck(ctx, chat, text)
+	case text == "🍪 Куки":
+		b.sendAccountList(ctx, chat)
+	case text == "➕ Добавить":
+		_, _ = b.API.SendMessageRaw(ctx, chat, "Какой сервис?",
+			ReplyKb([][]string{{"twitter"}, {"instagram"}, {"youtube"}, {"reddit"}, {"vimeo_bearer"}, {"❌ отмена"}}, true, "выбери сервис"))
+	case text == "🔄 Cobalt":
+		b.reply(ctx, chat, "Перезапустить cobalt?", [][]KbButton{{{Text: "🔄 Да", Data: "restart"}, {Text: "⏭ Нет", Data: "noop"}}})
+	case knownSites[strings.ToLower(text)] && !strings.ContainsAny(text, "/=;"):
+		// выбор сервиса с одноразовой клавиатуры
+		b.startAdd(ctx, chat, strings.ToLower(text))
+	case text == "❌ отмена":
+		b.pendingMu.Lock()
+		delete(b.pending, chat)
+		b.pendingMu.Unlock()
+		b.reply(ctx, chat, "отменено")
 	case strings.HasPrefix(text, "/"):
-		b.reply(ctx, chat, "Не знаю такую команду. /help")
+		b.reply(ctx, chat, "Не знаю такую команду. Кнопки — в клавиатуре внизу.")
 	default:
 		b.handlePaste(ctx, chat, text)
 	}
@@ -291,7 +314,8 @@ func (b *Bot) handlePaste(ctx context.Context, chat int64, text string) {
 func (b *Bot) savePaste(ctx context.Context, chat int64, site, label, paste string) {
 	m := ParseCookiePaste(paste)
 	if len(m) == 0 {
-		b.sendMenu(ctx, chat) // не понял сообщение — показываем меню
+		_, _ = b.API.SendMessageRaw(ctx, chat, "Не понял. Кнопки — внизу 👇",
+			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}, {"🔄 Cobalt"}}, false, ""))
 		return
 	}
 	acc := store.Account{Site: site, Label: label, Cookies: m}

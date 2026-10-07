@@ -174,6 +174,32 @@ func (c *Client) EditMessage(ctx context.Context, chat int64, msgID int, text st
 	return nil
 }
 
+// ReplyKb — постоянная клавиатура вместо поля ввода (is_persistent).
+func ReplyKb(rows [][]string, oneTime bool, placeholder string) map[string]any {
+	var kb [][]map[string]string
+	for _, row := range rows {
+		var r []map[string]string
+		for _, t := range row {
+			r = append(r, map[string]string{"text": t})
+		}
+		kb = append(kb, r)
+	}
+	m := map[string]any{"keyboard": kb, "is_persistent": true,
+		"resize_keyboard": true}
+	if oneTime {
+		m["one_time_keyboard"] = true
+	}
+	if placeholder != "" {
+		m["input_field_placeholder"] = placeholder
+	}
+	return m
+}
+
+// SendMessageRaw — текст с произвольной reply-клавиатурой.
+func (c *Client) SendMessageRaw(ctx context.Context, chat int64, text string, markup any) (int, error) {
+	return c.sendMessage(ctx, chat, text, markup)
+}
+
 // PinMessage — закрепить сообщение (бот-админ может).
 func (c *Client) PinMessage(ctx context.Context, chat int64, msgID int) error {
 	var out struct {
