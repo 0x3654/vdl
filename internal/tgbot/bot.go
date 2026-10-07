@@ -36,6 +36,15 @@ type pendingAdd struct {
 	deadline    time.Time
 }
 
+// knownSites — сервисы, которым cobalt (и наш стор) понимают куки;
+// ключ должен совпадать с cookies.json cobalt, иначе молча игнорируется.
+var knownSites = map[string]bool{
+	"twitter": true, "instagram": true, "youtube": true,
+	"reddit": true, "vimeo_bearer": true,
+}
+
+var siteList = []string{"twitter", "instagram", "youtube", "reddit", "vimeo_bearer"}
+
 const pendingTTL = 10 * time.Minute
 
 func New(api *Client, admins []int64, st *store.Store,
