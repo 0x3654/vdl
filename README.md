@@ -4,10 +4,17 @@
 
 **Self-hosted video downloader — from the iPhone share menu straight to Photos.**
 
-[![release](https://img.shields.io/github/v/release/0x3654/vdl)](https://github.com/0x3654/vdl/releases)
-[![platform](https://img.shields.io/badge/platform-linux%20%2F%20docker-blue)](https://github.com/0x3654/vdl/pkgs/container/vdl)
-[![language](https://img.shields.io/badge/lang-Go-00ADD8)](https://go.dev)
-[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+<p align="center">
+  <a href="https://github.com/0x3654/vdl/releases"><img src="https://img.shields.io/github/v/release/0x3654/vdl?style=for-the-badge" alt="release"></a>
+  <a href="https://github.com/0x3654/vdl/pkgs/container/vdl"><img src="https://img.shields.io/badge/docker-ghcr-2496ED?style=for-the-badge&logo=docker" alt="docker"></a>
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/go-stdlib-00ADD8?style=for-the-badge&logo=go" alt="go"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="license"></a>
+</p>
+
+<p align="center">
+  <a href="docs/demo.mp4"><img src="docs/demo.gif" width="280" alt="share sheet → shortcut → video in Photos"></a><br>
+  <sub>share sheet → <b>vdl</b> → 18 seconds later it's in Photos · <a href="docs/demo.mp4">mp4</a></sub>
+</p>
 
 [What it does](#-what-it-does) · [How it works](#-how-it-works) · [Shortcut](#-iphone-shortcut) · [Deploy](#-deploy) · [Cookies via Telegram](#-cookies-via-telegram) · [API](#-api) · [Оглавление по-русски](#-vdl--по-русски)
 
