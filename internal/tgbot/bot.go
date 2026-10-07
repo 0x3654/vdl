@@ -210,6 +210,11 @@ func (b *Bot) cmdAdd(ctx context.Context, chat int64, text string) {
 		b.reply(ctx, chat, "Формат: <code>/add [сайт] [метка]</code> — например /add twitter main")
 		return
 	}
+	if !knownSites[site] {
+		b.reply(ctx, chat, "🚫 сайт <code>"+html.EscapeString(site)+"</code> не поддерживается. "+
+			"Доступно: "+strings.Join(siteList, ", "))
+		return
+	}
 	if label == "" {
 		label = b.autoLabel(site)
 	}
