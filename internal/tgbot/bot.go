@@ -89,7 +89,7 @@ func (b *Bot) Run(ctx context.Context) {
 	mctx, mcancel := context.WithTimeout(ctx, 15*time.Second)
 	for chat := range b.Admins {
 		_, _ = b.API.SendMessageRaw(mctx, chat, "🎛 <b>vdl — куки</b>",
-			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}, {"🔄 Cobalt"}}, false, "кнопки или куки"))
+			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}}, false, "кнопки или куки"))
 	}
 	mcancel()
 	offset := 0
@@ -187,8 +187,6 @@ func (b *Bot) handle(ctx context.Context, u Update) {
 	case text == "➕ Добавить":
 		_, _ = b.API.SendMessageRaw(ctx, chat, "Какой сервис?",
 			ReplyKb([][]string{{"twitter"}, {"instagram"}, {"youtube"}, {"reddit"}, {"vimeo_bearer"}, {"❌ отмена"}}, true, "выбери сервис"))
-	case text == "🔄 Cobalt":
-		b.reply(ctx, chat, "Перезапустить cobalt?", [][]KbButton{{{Text: "🔄 Да", Data: "restart"}, {Text: "⏭ Нет", Data: "noop"}}})
 	case knownSites[strings.ToLower(text)] && !strings.ContainsAny(text, "/=;"):
 		// выбор сервиса с одноразовой клавиатуры
 		b.startAdd(ctx, chat, strings.ToLower(text))
@@ -315,7 +313,7 @@ func (b *Bot) savePaste(ctx context.Context, chat int64, site, label, paste stri
 	m := ParseCookiePaste(paste)
 	if len(m) == 0 {
 		_, _ = b.API.SendMessageRaw(ctx, chat, "Не понял. Кнопки — внизу 👇",
-			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}, {"🔄 Cobalt"}}, false, ""))
+			ReplyKb([][]string{{"🍪 Куки", "➕ Добавить"}}, false, ""))
 		return
 	}
 	acc := store.Account{Site: site, Label: label, Cookies: m}
