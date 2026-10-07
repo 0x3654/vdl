@@ -80,7 +80,8 @@ func (c *Client) GetUpdates(ctx context.Context, offset int) ([]Update, error) {
 }
 
 // SendMessage — HTML, без превью ссылок.
-func (c *Client) SendMessage(ctx context.Context, chat int64, text string, kb ...[][]KbButton) error {
+// SendMessage — возвращает id отправленного сообщения (для закрепления).
+func (c *Client) SendMessage(ctx context.Context, chat int64, text string, kb ...[][]KbButton) (int, error) {
 	var markup any
 	if len(kb) > 0 {
 		markup = map[string]any{"inline_keyboard": kb[0]}
@@ -88,10 +89,13 @@ func (c *Client) SendMessage(ctx context.Context, chat int64, text string, kb ..
 	return c.sendMessage(ctx, chat, text, markup)
 }
 
-func (c *Client) sendMessage(ctx context.Context, chat int64, text string, markup any) error {
+func (c *Client) sendMessage(ctx context.Context, chat int64, text string, markup any) (int, error) {
 	var out struct {
 		OK          bool   `json:"ok"`
 		Description string `json:"description"`
+		Result      struct {
+			MessageID int `json:"message_id"`
+		} `json:"result"`
 	}
 	payload := map[string]any{
 		"chat_id":              chat,
@@ -102,14 +106,13 @@ func (c *Client) sendMessage(ctx context.Context, chat int64, text string, marku
 	if markup != nil {
 		payload["reply_markup"] = markup
 	}
-	err := c.post(ctx, "sendMessage", payload, &out)
-	if err != nil {
-		return err
+	if err := c.post(ctx, "sendMessage", payload, &out); err != nil {
+		return 0, err
 	}
 	if !out.OK {
-		return fmt.Errorf("tg: sendMessage: %s", out.Description)
+		return 0, fmt.Errorf("tg: sendMessage: %s", out.Description)
 	}
-	return nil
+	return out.Result.MessageID, nil
 }
 
 func (c *Client) post(ctx context.Context, method string, payload any, out any) error {
@@ -169,4 +172,14 @@ func (c *Client) EditMessage(ctx context.Context, chat int64, msgID int, text st
 		return fmt.Errorf("tg: editMessageText: %s", out.Description)
 	}
 	return nil
+}
+
+// PinMessage — закрепить сообщение (бот-админ может).
+func (c *Client) PinMessage(ctx context.Context, chat int64, msgID int) error {
+	var out struct {
+		OK bool `json:"ok"`
+	}
+	return c.post(ctx, "pinChatMessage", map[string]any{
+		"chat_id": chat, "message_id": msgID, "disable_notification": true,
+	}, &out)
 }

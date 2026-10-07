@@ -63,8 +63,27 @@ func New(api *Client, admins []int64, st *store.Store,
 }
 
 // Run — главный цикл; блокирует до отмены ctx.
+// sendMenu — меню с кнопками; возвращает id для закрепления.
+func (b *Bot) sendMenu(ctx context.Context, chat int64) {
+	b.reply(ctx, chat, "🎛 <b>vdl — куки</b>", [][]KbButton{
+		{{Text: "🍪 Текущие куки", Data: "list"}},
+		{{Text: "➕ Добавить куки", Data: "add"}},
+	})
+}
+
 func (b *Bot) Run(ctx context.Context) {
 	go b.sender(ctx)
+	// меню сразу и закреплённым — открывать чат и жать, ничего не печатая
+	mctx, mcancel := context.WithTimeout(ctx, 15*time.Second)
+	for chat := range b.Admins {
+		if mid, err := b.API.SendMessage(mctx, chat, "🎛 <b>vdl — куки</b>", [][]KbButton{
+			{{Text: "🍪 Текущие куки", Data: "list"}},
+			{{Text: "➕ Добавить куки", Data: "add"}},
+		}); err == nil && mid != 0 {
+			_ = b.API.PinMessage(mctx, chat, mid)
+		}
+	}
+	mcancel()
 	offset := 0
 	for {
 		updates, err := b.API.GetUpdates(ctx, offset)
@@ -105,7 +124,7 @@ func (b *Bot) sender(ctx context.Context) {
 		case text := <-b.notifyCh:
 			for chat := range b.Admins {
 				cctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-				err := b.API.SendMessage(cctx, chat, text)
+				_, err := b.API.SendMessage(cctx, chat, text)
 				cancel()
 				if err != nil {
 					log.Printf("tg: notify: %v", err)
@@ -272,7 +291,7 @@ func (b *Bot) handlePaste(ctx context.Context, chat int64, text string) {
 func (b *Bot) savePaste(ctx context.Context, chat int64, site, label, paste string) {
 	m := ParseCookiePaste(paste)
 	if len(m) == 0 {
-		b.reply(ctx, chat, "Не похоже на куки. /help — форматы.")
+		b.sendMenu(ctx, chat) // не понял сообщение — показываем меню
 		return
 	}
 	acc := store.Account{Site: site, Label: label, Cookies: m}
@@ -386,12 +405,7 @@ func isDead(err error) bool {
 func (b *Bot) reply(ctx context.Context, chat int64, text string, kb ...[][]KbButton) {
 	cctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	var err error
-	if len(kb) > 0 {
-		err = b.API.SendMessage(cctx, chat, text, kb[0])
-	} else {
-		err = b.API.SendMessage(cctx, chat, text)
-	}
+	_, err := b.API.SendMessage(cctx, chat, text, kb...)
 	if err != nil {
 		log.Printf("tg: reply: %v", err)
 	}
