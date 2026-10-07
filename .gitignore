@@ -1,0 +1,4 @@
+dist/
+data/
+*.local
+cookies.json

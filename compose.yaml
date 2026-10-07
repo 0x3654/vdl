@@ -1,0 +1,32 @@
+# Локальная сборка для разработки/E2E: cobalt + vdl на 127.0.0.1.
+# Прод-деплой — ansible-роль (ansible репозиторий, roles/vdl).
+services:
+  cobalt:
+    image: ghcr.io/imputnet/cobalt:11
+    init: true
+    read_only: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9000:9000"
+    environment:
+      # локально без домена: tunnel-ссылки будут кривые, redirect работает
+      API_URL: "http://localhost:9000/"
+
+  vdl:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - cobalt
+    ports:
+      # LAN-биндинг для теста шортката с айфона (домашняя сеть, токен обязателен);
+      # прод — ansible-роль, там только 127.0.0.1 + nginx TLS
+      - "8360:8360"
+    environment:
+      TOKEN: devtoken
+      COBALT_URL: http://cobalt:9000
+      # TWITTER_SOCKS: socks5://host.docker.internal:1081
+    volumes:
+      - vdl-data:/data
+
+volumes:
+  vdl-data:

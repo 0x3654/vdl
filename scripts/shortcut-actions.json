@@ -1,0 +1,93 @@
+{
+ "actions": [
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
+   "WFWorkflowActionParameters": {
+    "WFURL": {
+     "Value": {
+      "string": "__BASE__￼",
+      "attachmentsByRange": {
+       "{47, 1}": {
+        "Type": "ExtensionInput"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "UUID": "C0F2447C-46DC-4349-A0CB-52FCF4D75473"
+   }
+  },
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+   "WFWorkflowActionParameters": {
+    "WFInput": {
+     "Value": {
+      "Type": "ActionOutput",
+      "OutputName": "Contents of URL",
+      "OutputUUID": "C0F2447C-46DC-4349-A0CB-52FCF4D75473"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    },
+    "UUID": "BA326EB4-46D0-4C7F-BAB1-465F367191E9",
+    "WFGetDictionaryValueType": "Value",
+    "WFDictionaryKey": "medias"
+   }
+  },
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.repeat.each",
+   "WFWorkflowActionParameters": {
+    "WFInput": {
+     "Value": {
+      "OutputUUID": "BA326EB4-46D0-4C7F-BAB1-465F367191E9",
+      "Type": "ActionOutput",
+      "OutputName": "Dictionary Value"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    },
+    "GroupingIdentifier": "26497DF6-21B5-4AA5-A271-5B3258C6F0C9",
+    "WFControlFlowMode": 0
+   }
+  },
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
+   "WFWorkflowActionParameters": {
+    "WFURL": {
+     "Value": {
+      "string": "￼",
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "VariableName": "Repeat Item",
+        "Type": "Variable"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "UUID": "1EB6F0EC-411E-4AFA-9D24-720DC3A7B1D3"
+   }
+  },
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.savetocameraroll",
+   "WFWorkflowActionParameters": {
+    "WFInput": {
+     "Value": {
+      "OutputUUID": "1EB6F0EC-411E-4AFA-9D24-720DC3A7B1D3",
+      "Type": "ActionOutput",
+      "OutputName": "Contents of URL"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    },
+    "WFCameraRollSelectedGroup": "Recents",
+    "UUID": "ADFFDC2A-D571-4DC0-BDCA-E529B18D8F7D"
+   }
+  },
+  {
+   "WFWorkflowActionIdentifier": "is.workflow.actions.repeat.each",
+   "WFWorkflowActionParameters": {
+    "UUID": "E3D08B65-781F-4EB4-B70B-ADC88F499A97",
+    "GroupingIdentifier": "26497DF6-21B5-4AA5-A271-5B3258C6F0C9",
+    "WFControlFlowMode": 2
+   }
+  }
+ ]
+}

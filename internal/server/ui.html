@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vdl — видео в галерею одним тапом</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 16px/1.6 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    background: #0d1117; color: #e6edf3; padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; } h1 span { opacity: .5; font-weight: 400; }
+  code, .url {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em;
+    background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: .1em .4em;
+  }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+          padding: 1rem 1.2rem; margin: 1rem 0; }
+  ol li { margin: .5rem 0; }
+  a { color: #58a6ff; }
+  .muted { color: #8b949e; }
+  kbd { background:#21262d; border:1px solid #30363d; border-radius:4px; padding:.05em .4em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>vdl <span>· видео в галерею одним тапом</span></h1>
+  <p class="muted">Self-hosted загрузчик: шорткат на айфоне → видео уже в Фото.
+     Ядро — cobalt, поверх — свои резолверы и куки-менеджер в Telegram.</p>
+
+  <div class="card">
+    <b>Шорткат (один раз, 7 действий)</b>
+    <ol>
+      <li><i>Receive URLs from Share Sheet</i> (вход — только URLs)</li>
+      <li><i>If</i> [Shortcut Input] <b>не имеет значения</b> → Show Notification «Нет ссылки» → <i>Stop This Shortcut</i></li>
+      <li><i>Get Contents of URL</i>:
+        <span class="url">https://vdl.0x3654.com/dl?token=<b>&lt;твой_токен&gt;</b>&amp;list=1&amp;url=[Shortcut Input]</span></li>
+      <li><i>Get Dictionary Value</i> → ключ <code>medias</code></li>
+      <li><i>Repeat with Each</i>: внутри — <i>Get Contents of URL</i> [Repeat Item] → <i>Save to Photo Album</i></li>
+      <li>После повтора — <i>Show Notification</i> «✓ Сохранено»</li>
+      <li>В настройках шортката (ⓘ) выключи <b>Show When Run</b> — работает из шаринга молча</li>
+    </ol>
+    <p class="muted">Качает всё: видео, картинки, квот-посты (видео из квота), галереи — каждое медиа отдельным файлом в Фото.</p>
+  </div>
+
+  <div class="card">
+    <b>Что умеет</b>
+    <p>Twitter/X (без кук для публичного, NSFW — с куками), YouTube, Instagram,
+       TikTok, Reddit, Bluesky, VK, Rutube и ещё ~20 сервисов через cobalt.</p>
+    <p class="muted">API: <code>GET /dl?token=…&amp;url=…</code> → 302 на видео.
+       Куки аккаунтов — боту @RockyClawdBot в служебной группе: <code>/add</code>, вставь куки,
+       <code>/accounts</code>, <code>/check</code>.</p>
+  </div>
+
+  <div class="card">
+    <b>Статус</b>
+    <p><code>GET /healthz</code> — живость и число активных куки-аккаунтов.
+       <code>GET /admin/accounts?token=…</code> — список (без секретов).</p>
+  </div>
+</main>
+</body>
+</html>
