@@ -26,11 +26,25 @@ func NewClient(token string) *Client {
 }
 
 type Update struct {
-	UpdateID int      `json:"update_id"`
-	Message  *Message `json:"message"`
+	UpdateID      int            `json:"update_id"`
+	Message       *Message       `json:"message"`
+	CallbackQuery *CallbackQuery `json:"callback_query"`
+}
+
+type CallbackQuery struct {
+	ID      string   `json:"id"`
+	Data    string   `json:"data"`
+	Message *Message `json:"message"`
+}
+
+type KbButton struct {
+	Text string `json:"text"`
+	Data string `json:"callback_data,omitempty"`
+	URL  string `json:"url,omitempty"`
 }
 
 type Message struct {
+	ID   int    `json:"message_id"`
 	Chat Chat   `json:"chat"`
 	Text string `json:"text"`
 	From *struct {
@@ -54,7 +68,7 @@ func (c *Client) GetUpdates(ctx context.Context, offset int) ([]Update, error) {
 	err := c.post(ctx, "getUpdates", map[string]any{
 		"offset":          offset,
 		"timeout":         50,
-		"allowed_updates": []string{"message"},
+		"allowed_updates": []string{"message", "callback_query"},
 	}, &out)
 	if err != nil {
 		return nil, err
@@ -66,17 +80,29 @@ func (c *Client) GetUpdates(ctx context.Context, offset int) ([]Update, error) {
 }
 
 // SendMessage — HTML, без превью ссылок.
-func (c *Client) SendMessage(ctx context.Context, chat int64, text string) error {
+func (c *Client) SendMessage(ctx context.Context, chat int64, text string, kb ...[][]KbButton) error {
+	var markup any
+	if len(kb) > 0 {
+		markup = map[string]any{"inline_keyboard": kb[0]}
+	}
+	return c.sendMessage(ctx, chat, text, markup)
+}
+
+func (c *Client) sendMessage(ctx context.Context, chat int64, text string, markup any) error {
 	var out struct {
 		OK          bool   `json:"ok"`
 		Description string `json:"description"`
 	}
-	err := c.post(ctx, "sendMessage", map[string]any{
-		"chat_id":      chat,
-		"text":         text,
-		"parse_mode":   "HTML",
+	payload := map[string]any{
+		"chat_id":              chat,
+		"text":                 text,
+		"parse_mode":           "HTML",
 		"link_preview_options": map[string]any{"is_disabled": true},
-	}, &out)
+	}
+	if markup != nil {
+		payload["reply_markup"] = markup
+	}
+	err := c.post(ctx, "sendMessage", payload, &out)
 	if err != nil {
 		return err
 	}
@@ -108,6 +134,39 @@ func (c *Client) post(ctx context.Context, method string, payload any, out any) 
 	}
 	if err := json.Unmarshal(raw, out); err != nil {
 		return fmt.Errorf("tg: %s: битый ответ", method)
+	}
+	return nil
+}
+
+// AnswerCallbackQuery — тост на нажатие кнопки.
+func (c *Client) AnswerCallback(ctx context.Context, id, text string) error {
+	var out struct {
+		OK bool `json:"ok"`
+	}
+	return c.post(ctx, "answerCallbackQuery", map[string]any{
+		"callback_query_id": id, "text": text,
+	}, &out)
+}
+
+// EditMessageText — поменять текст/кнопки у сообщения с кнопками.
+func (c *Client) EditMessage(ctx context.Context, chat int64, msgID int, text string, kb [][]KbButton) error {
+	var out struct {
+		OK          bool   `json:"ok"`
+		Description string `json:"description"`
+	}
+	payload := map[string]any{
+		"chat_id": chat, "message_id": msgID, "text": text,
+		"parse_mode":           "HTML",
+		"link_preview_options": map[string]any{"is_disabled": true},
+	}
+	if kb != nil {
+		payload["reply_markup"] = map[string]any{"inline_keyboard": kb}
+	}
+	if err := c.post(ctx, "editMessageText", payload, &out); err != nil {
+		return err
+	}
+	if !out.OK {
+		return fmt.Errorf("tg: editMessageText: %s", out.Description)
 	}
 	return nil
 }
