@@ -146,7 +146,7 @@ func (b *Bot) sender(ctx context.Context) {
 var siteHint = map[string]struct{ url, need, how string }{
 	"twitter":      {"https://x.com", "auth_token, ct0", "войти → F12 → Application → Cookies → x.com → скопировать обе"},
 	"instagram":    {"https://www.instagram.com", "sessionid, csrftoken, ds_user_id", "войти → F12 → Application → Cookies → instagram.com → скопировать нужные (или весь хедер Cookie из Network)"},
-	"youtube":      {"https://www.youtube.com", "VISITOR_INFO1_LIVE, SID, HSID, SSID, APISID, SAPISID", "войти → F12 → Network → любой запрос → Request Headers → Cookie → скопировать целиком"},
+	"youtube":      {"https://www.youtube.com", "VISITOR_INFO1_LIVE, SID, HSID, SSID, APISID, SAPISID", "войти → F12 → Application → Cookies → выделить все строки и скопировать (или Network → хедер Cookie целиком)"},
 	"reddit":       {"https://www.reddit.com", "reddit_session", "войти → F12 → Application → Cookies → reddit.com → reddit_session"},
 	"vimeo_bearer": {"https://vimeo.com", "vimeooken? — bearer-строка", "см. доку cobalt cookies.json: vimeo_bearer"},
 }

@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var cookieNameRe = regexp.MustCompile(`^[A-Za-z0-9_.\-]+$`)
+
 var pairRe = regexp.MustCompile(`^\s*([A-Za-z0-9_.\-]+)\s*[=:]\s*(.+?)\s*[;,]?\s*$`)
 
 // ParseCookiePaste — строка из чата → карта кук. Понимает:
@@ -34,6 +36,14 @@ func ParseCookiePaste(s string) map[string]string {
 	for _, seg := range strings.FieldsFunc(s, func(r rune) bool {
 		return r == ';' || r == ',' || r == '\n' || r == '\r'
 	}) {
+		// таблица DevTools Application→Cookies: name<TAB>value<TAB>домен…
+		if f := strings.SplitN(seg, "\t", 3); len(f) >= 2 && cookieNameRe.MatchString(strings.TrimSpace(f[0])) {
+			v := strings.Trim(strings.TrimSpace(f[1]), "=;, \t") // 'name<TAB>= value,'
+			if v != "" && !strings.Contains(v, "\t") {
+				out[strings.ToLower(strings.TrimSpace(f[0]))] = strings.Trim(v, `"`)
+			}
+			continue
+		}
 		if m := pairRe.FindStringSubmatch(seg); m != nil {
 			out[strings.ToLower(m[1])] = cleanValue(m[2])
 			continue
