@@ -43,10 +43,10 @@ type resp struct {
 // cobalt сам решает redirect (IP-независимый CDN) vs tunnel (скачивает сам).
 func (c *Client) Resolve(ctx context.Context, rawURL string) (*media.ResolveResult, error) {
 	body, err := json.Marshal(map[string]any{
-		"url":            rawURL,
-		"videoQuality":   "max",
-		"downloadMode":   "auto",
-		"alwaysProxy":    false,
+		"url":             rawURL,
+		"videoQuality":    "max",
+		"downloadMode":    "auto",
+		"alwaysProxy":     false,
 		"disableMetadata": false,
 	})
 	if err != nil {
@@ -60,9 +60,12 @@ func (c *Client) Resolve(ctx context.Context, rawURL string) (*media.ResolveResu
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
-	respBytes, err := c.do(req)
-	if err != nil {
-		return nil, err
+	// отдельное имя: err уже объявлен как interface error выше, повторное
+	// := заворачивает typed-nil *media.Error в ненулевой интерфейс (грабля,
+	// ронявшая каждый успешный ответ cobalt как «upstream: <nil>»)
+	respBytes, derr := c.do(req)
+	if derr != nil {
+		return nil, derr
 	}
 	var r resp
 	if err := json.Unmarshal(respBytes, &r); err != nil {
@@ -121,7 +124,9 @@ func (c *Client) do(req *http.Request) ([]byte, *media.Error) {
 
 // mapError — коды cobalt → наши виды. Точных кодов в доках мало, матчуем
 // по подстрокам, неизвестное — upstream с кодом в Detail.
-func mapError(e *struct{ Code string `json:"code"` }) *media.Error {
+func mapError(e *struct {
+	Code string `json:"code"`
+}) *media.Error {
 	if e == nil {
 		return &media.Error{Kind: media.ErrUpstream, Detail: "cobalt: error без кода"}
 	}
@@ -162,8 +167,8 @@ func truncate(s string, n int) string {
 // в реестре регистрируется последним (после сайт-специфичных цепочек).
 type CatchAll struct{ *Client }
 
-func (c CatchAll) Name() string           { return "cobalt" }
-func (c CatchAll) MatchHost(string) bool  { return true }
+func (c CatchAll) Name() string          { return "cobalt" }
+func (c CatchAll) MatchHost(string) bool { return true }
 func (c CatchAll) Resolve(ctx context.Context, u *url.URL) (*media.ResolveResult, error) {
 	return c.Client.Resolve(ctx, u.String())
 }
