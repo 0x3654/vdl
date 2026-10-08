@@ -164,7 +164,9 @@ func materializeCookies(path string, st *store.Store) error {
 		return err
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
+	// 0666: cobalt в контейнере живёт под uid 1000 (node) и должен читать
+	// и обновлять файл (refresh ct0); каталог 0700/65534 закрывает от остальных
+	if err := os.WriteFile(tmp, raw, 0o666); err != nil {
 		return err
 	}
 	return os.Rename(tmp, path)
