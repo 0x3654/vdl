@@ -97,9 +97,11 @@ func (s *Server) dl(w http.ResponseWriter, r *http.Request) {
 
 // isTunnelURL — ссылка на /tunnel одного из наших cobalt (свой домен).
 func isTunnelURL(r *http.Request, mediaURL string) bool {
+	_ = r
+	// tunnel-ссылки генерируют только наши cobalt (vdl./ae2. домены);
+	// резолверы чужих /tunnel не отдают
 	u, err := url.Parse(mediaURL)
-	return err == nil && u.Host != "" && strings.Contains(u.Path, "/tunnel") &&
-		strings.EqualFold(u.Host, r.Host)
+	return err == nil && u.Host != "" && strings.Contains(u.Path, "/tunnel")
 }
 
 // proxyURL — ссылка на наш стрим-прокси: тот же хост/порт/схема, что у входящего
