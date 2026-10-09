@@ -77,7 +77,11 @@ func (s *Server) dl(w http.ResponseWriter, r *http.Request) {
 	if strings.EqualFold(r.URL.Query().Get("list"), "1") {
 		proxied := make([]string, len(medias))
 		for i, m := range medias {
-			proxied[i] = proxyURL(r, m)
+			if isTunnelURL(r, m) {
+				proxied[i] = m // tunnel cobalt уже наш домен (ютуб IP-bound)
+			} else {
+				proxied[i] = proxyURL(r, m)
+			}
 		}
 		writeJSON(w, 200, map[string]any{"ok": true, "count": len(proxied), "medias": proxied})
 		return
@@ -89,6 +93,13 @@ func (s *Server) dl(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.redirect(w, r, medias[idx])
+}
+
+// isTunnelURL — ссылка на /tunnel одного из наших cobalt (свой домен).
+func isTunnelURL(r *http.Request, mediaURL string) bool {
+	u, err := url.Parse(mediaURL)
+	return err == nil && u.Host != "" && strings.Contains(u.Path, "/tunnel") &&
+		strings.EqualFold(u.Host, r.Host)
 }
 
 // proxyURL — ссылка на наш стрим-прокси: тот же хост/порт/схема, что у входящего
