@@ -5,6 +5,7 @@ package twitter
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"vdl/internal/media"
@@ -104,6 +105,7 @@ type parsedTweet struct {
 	Name   string
 	Text   string
 	Medias []media.Media
+	Links  []string
 }
 
 func parseTweet(t map[string]any) *parsedTweet {
@@ -123,11 +125,19 @@ func parseTweet(t map[string]any) *parsedTweet {
 	if note := str(dict(dict(dict(t["note_tweet"])["note_tweet_results"])["result"]), "text"); note != "" {
 		text = note
 	}
+	var links []string
+	for _, uv := range sl(dict(legacy["entities"])["urls"]) {
+		e := dict(uv)
+		if u := str(e, "expanded_url"); u != "" && !strings.HasPrefix(u, "https://pic.twitter.com") {
+			links = append(links, u)
+		}
+	}
 	pt := &parsedTweet{
 		ID:     str(t, "rest_id", "id_str"),
 		Screen: screen,
 		Text:   text,
 		Medias: extractMedia(legacy),
+		Links:  links,
 	}
 	if pt.ID == "" {
 		pt.ID = str(legacy, "id_str")
@@ -304,8 +314,9 @@ func parseTweetDetailBody(body []byte, focalID string) (*media.ResolveResult, er
 		Source: "graphql", Site: "twitter",
 		Author: main.Screen, Text: main.Text,
 		Medias: main.Medias,
+		Links:  main.Links,
 	}
-	if len(res.Medias) == 0 {
+	if len(res.Medias) == 0 && len(res.Links) == 0 {
 		return nil, &media.Error{Kind: media.ErrNoMedia, Detail: "gql: твит без медиа"}
 	}
 	return res, nil

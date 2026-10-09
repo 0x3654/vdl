@@ -51,19 +51,15 @@ func (s *Server) dl(w http.ResponseWriter, r *http.Request) {
 	// кэш: ретраи шортката и повторные запросы не дёргают апстрим
 	medias, ok := s.Cache.get(rawURL)
 	if !ok {
-		ctx, cancel := context.WithTimeout(r.Context(), s.ResolveTimeout)
-		var res *media.ResolveResult
-		res, err := resolver.Resolve(ctx, u)
-		cancel()
-		if err != nil {
-			s.handleResolveError(w, err)
+		var rerr error
+		medias, rerr = s.resolveDeep(r.Context(), u)
+		if rerr != nil {
+			s.handleResolveError(w, rerr)
 			return
 		}
-		medias = make([]string, 0, len(res.Medias))
-		for _, m := range res.Medias {
-			if m.Best != "" {
-				medias = append(medias, m.Best)
-			}
+		if len(medias) == 0 {
+			writeJSON(w, 422, map[string]string{"error": "в посте нет медиа"})
+			return
 		}
 		s.Cache.put(rawURL, medias)
 	}
@@ -241,4 +237,52 @@ func extractURLParam(r *http.Request) string {
 		return dec
 	}
 	return q
+}
+
+// resolveDeep — резолв + рекурсия по Links: пост может быть текстом со
+// ссылками на другие посты/сервисы (твит со ссылкой на твит или youtube).
+// Вглубь до 2 уровней, всего не больше 6 вложенных резолвов.
+func (s *Server) resolveDeep(parent context.Context, u *url.URL) ([]string, error) {
+	type item struct {
+		u     *url.URL
+		depth int
+	}
+	var medias []string
+	seenURL := map[string]bool{}
+	queue := []item{{u, 0}}
+	resolves := 0
+	for len(queue) > 0 {
+		it := queue[0]
+		queue = queue[1:]
+		ctx, cancel := context.WithTimeout(parent, s.ResolveTimeout)
+		res, err := s.Reg.ForHost(strings.ToLower(it.u.Hostname())).Resolve(ctx, it.u)
+		cancel()
+		if err != nil {
+			if it.depth == 0 {
+				return nil, err
+			}
+			continue // вложенный линк не разрешался — молча пропускаем
+		}
+		resolves++
+		for _, m := range res.Medias {
+			if m.Best != "" && !seenURL[m.Best] {
+				seenURL[m.Best] = true
+				medias = append(medias, m.Best)
+			}
+		}
+		if it.depth >= 2 || resolves >= 6 {
+			continue
+		}
+		for _, l := range res.Links {
+			lu, err := url.Parse(l)
+			if err != nil || seenURL[l] {
+				continue
+			}
+			seenURL[l] = true
+			if s.Reg.ForHost(strings.ToLower(lu.Hostname())) != nil {
+				queue = append(queue, item{lu, it.depth + 1})
+			}
+		}
+	}
+	return medias, nil
 }

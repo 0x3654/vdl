@@ -35,6 +35,9 @@ type ResolveResult struct {
 	Author string  `json:"author,omitempty"`
 	Text   string  `json:"text,omitempty"`
 	Medias []Media `json:"medias"`
+	// Links — внешние ссылки из текста поста (fx разворачивает t.co):
+	// сервер резолвит их тем же реестром — твит→твит→youtube рекурсивно
+	Links []string `json:"links,omitempty"`
 }
 
 // First — первое медиа (фаза 1: ?index= не поддерживаем, берём лучшее).
@@ -151,7 +154,7 @@ func (c *Chain) Resolve(ctx context.Context, u *url.URL) (*ResolveResult, error)
 	for _, p := range c.parts {
 		res, err := p.Resolve(ctx, u)
 		if err == nil {
-			if len(res.Medias) > 0 {
+			if len(res.Medias) > 0 || len(res.Links) > 0 {
 				return res, nil
 			}
 			lastErr = &Error{Kind: ErrNoMedia, Detail: p.Name() + ": пустой результат"}

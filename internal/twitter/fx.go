@@ -8,7 +8,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"vdl/internal/media"
@@ -150,7 +152,41 @@ func (f *FXClient) Tweet(ctx context.Context, screen, id string) (*media.Resolve
 		}
 	}
 	if len(res.Medias) == 0 {
-		return nil, &media.Error{Kind: media.ErrNoMedia, Detail: "fx: твит без медиа"}
+		// без медиа — но текст может содержать ссылки (fx разворачивает t.co):
+		// это не пустой пост, а кандидат на рекурсию
+		res.Links = linksFromText(res.Text)
+		if len(res.Links) == 0 {
+			return nil, &media.Error{Kind: media.ErrNoMedia, Detail: "fx: твит без медиа"}
+		}
+	} else if res.Text != "" {
+		res.Links = linksFromText(res.Text)
 	}
 	return res, nil
+}
+
+var urlInText = regexp.MustCompile(`https?://[^\s]+`)
+var skipLinkPrefix = []string{
+	"https://pic.twitter.com", "https://t.co", "https://x.com/i/",
+}
+
+// linksFromText — внешние ссылки из текста твита (медиа-служебные вон).
+func linksFromText(text string) []string {
+	var out []string
+	for _, u := range urlInText.FindAllString(text, 10) {
+		u = strings.TrimRight(u, ".,);…»")
+		if u == "" {
+			continue
+		}
+		skip := false
+		for _, p := range skipLinkPrefix {
+			if strings.HasPrefix(u, p) {
+				skip = true
+				break
+			}
+		}
+		if !skip {
+			out = append(out, u)
+		}
+	}
+	return out
 }
