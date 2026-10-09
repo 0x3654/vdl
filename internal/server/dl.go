@@ -174,8 +174,8 @@ func isMediaHost(u *url.URL) bool {
 // fileClient — без общего таймаута (стрим может быть долгим), idle короткие.
 var fileClient = &http.Client{
 	Transport: &http.Transport{
-		TLSHandshakeTimeout: 10 * time.Second,
-		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		IdleConnTimeout:       90 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 	},
 }

@@ -15,6 +15,7 @@ type Config struct {
 	DataDir        string        // том с состоянием: accounts.json, query-ids.json
 	Token          string        // доступ к /dl и /admin (constant-time compare)
 	CobaltURL      string        // базовый URL cobalt-инстанса
+	CobaltAgeURL   string        // второй cobalt с домашним egress (age-gate)
 	TGBotToken     string        // пусто → бот и чекер выключены
 	TGAdminChats   []int64       // супергруппа управления куками + личка
 	CheckInterval  time.Duration // период health-check; 0 → выключен
@@ -30,6 +31,7 @@ func Load() (Config, error) {
 		DataDir:        envStr("DATA_DIR", "/data"),
 		Token:          os.Getenv("TOKEN"),
 		CobaltURL:      strings.TrimRight(envStr("COBALT_URL", "http://127.0.0.1:9000"), "/"),
+		CobaltAgeURL:   strings.TrimRight(envStr("COBALT_AGE_URL", ""), "/"),
 		TGBotToken:     os.Getenv("TG_BOT_TOKEN"),
 		CheckInterval:  envDur("CHECK_INTERVAL", 12*time.Hour),
 		CookiesOut:     os.Getenv("COOKIES_OUT"),

@@ -49,11 +49,11 @@ func (r *ResolveResult) First() (*Media, error) {
 type ErrKind int
 
 const (
-	ErrBadURL        ErrKind = iota // 400 — не ссылка/не поддерживаемый сайт
-	ErrNoMedia                      // 422 — пост без медиа
-	ErrCookiesDead                  // 503 + TG-алерт: все аккаунты умерли
-	ErrRateLimited                  // 503 + Retry-After
-	ErrUpstream                     // 502
+	ErrBadURL      ErrKind = iota // 400 — не ссылка/не поддерживаемый сайт
+	ErrNoMedia                    // 422 — пост без медиа
+	ErrCookiesDead                // 503 + TG-алерт: все аккаунты умерли
+	ErrRateLimited                // 503 + Retry-After
+	ErrUpstream                   // 502
 )
 
 func (k ErrKind) String() string {
@@ -143,7 +143,7 @@ func NewChain(name string, match func(host string) bool, parts ...Resolver) *Cha
 	return &Chain{name: name, match: match, parts: parts}
 }
 
-func (c *Chain) Name() string      { return c.name }
+func (c *Chain) Name() string            { return c.name }
 func (c *Chain) MatchHost(h string) bool { return c.match != nil && c.match(h) }
 
 func (c *Chain) Resolve(ctx context.Context, u *url.URL) (*ResolveResult, error) {

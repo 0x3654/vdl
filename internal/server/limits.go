@@ -10,11 +10,11 @@ import (
 // rateLimiter — token bucket, refill rpm/60 в секунду, burst на старте.
 // Карта на N сидящих IP с ленивой чисткой: персональный сервис, не CDN.
 type rateLimiter struct {
-	mu     sync.Mutex
-	rps    float64
-	burst  float64
+	mu      sync.Mutex
+	rps     float64
+	burst   float64
 	buckets map[string]*bucket
-	lastGC time.Time
+	lastGC  time.Time
 }
 
 type bucket struct {
@@ -76,8 +76,8 @@ type resolveCache struct {
 }
 
 type cacheItem struct {
-	bests    []string
-	expires  time.Time
+	bests   []string
+	expires time.Time
 }
 
 func newResolveCache(max int, ttl time.Duration) *resolveCache {

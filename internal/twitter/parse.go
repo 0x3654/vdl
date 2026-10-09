@@ -99,11 +99,11 @@ func extractMedia(legacy map[string]any) []media.Media {
 
 // parseTweet — result твита → компактное представление; nil для мусора.
 type parsedTweet struct {
-	ID      string
-	Screen  string
-	Name    string
-	Text    string
-	Medias  []media.Media
+	ID     string
+	Screen string
+	Name   string
+	Text   string
+	Medias []media.Media
 }
 
 func parseTweet(t map[string]any) *parsedTweet {

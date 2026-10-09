@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -57,13 +58,18 @@ func main() {
 		}
 	}
 
-
 	cob := cobalt.New(&http.Client{Timeout: 25 * time.Second}, cfg.CobaltURL)
 	fx := twitter.NewFX(&http.Client{Timeout: 15 * time.Second})
 	gql := twitter.NewGQL(gqlClient(), st, ids, notify)
 
 	reg := &media.Registry{}
 	reg.Register(twitter.Chain(cob, fx, gql))
+	// youtube: cobalt-main (датацентр) → cobalt-age (домашний egress,
+	// только для возрастных) — регистрируется ДО catch-all
+	if cfg.CobaltAgeURL != "" {
+		reg.Register(media.NewChain("youtube-age", ytHost,
+			cobaltTwWrap{cob}, cobaltAge{cobalt.New(&http.Client{Timeout: 40 * time.Second}, cfg.CobaltAgeURL)}))
+	}
 	reg.Register(cobalt.CatchAll{Client: cob})
 
 	// материализация кук для cobalt (контейнер рестартует cron'ом по mtime);
@@ -123,6 +129,7 @@ func gqlClient() *http.Client {
 		IdleConnTimeout:     60 * time.Second,
 	}}
 }
+
 // materializeCookies — активные аккаунты → cookies.json в формате cobalt
 // ({twitter: ["auth_token=…; ct0=…"], instagram: […]}, массивы = ротация).
 // cobalt сам обновляет куки в файле (refresh ct0): строки с тем же
@@ -185,4 +192,29 @@ func parseCookieHeader(s string) map[string]string {
 		return nil
 	}
 	return out
+}
+
+// ytHost — youtube-хосты для цепочки age-fallback.
+func ytHost(h string) bool {
+	l := strings.ToLower(h)
+	return strings.HasSuffix(l, "youtube.com") || strings.HasSuffix(l, "youtu.be") ||
+		strings.HasSuffix(l, "youtube-nocookie.com")
+}
+
+// cobaltAge — второй cobalt (прокси через домашний IP) в цепочке youtube.
+type cobaltAge struct{ *cobalt.Client }
+
+func (c cobaltAge) Name() string            { return "cobalt-age" }
+func (c cobaltAge) MatchHost(h string) bool { return ytHost(h) }
+func (c cobaltAge) Resolve(ctx context.Context, u *url.URL) (*media.ResolveResult, error) {
+	return c.Client.Resolve(ctx, u.String())
+}
+
+// cobaltTwWrap — cobalt, ограниченный youtube-хостами (звено цепочки).
+type cobaltTwWrap struct{ *cobalt.Client }
+
+func (c cobaltTwWrap) Name() string            { return "cobalt" }
+func (c cobaltTwWrap) MatchHost(h string) bool { return ytHost(h) }
+func (c cobaltTwWrap) Resolve(ctx context.Context, u *url.URL) (*media.ResolveResult, error) {
+	return c.Client.Resolve(ctx, u.String())
 }

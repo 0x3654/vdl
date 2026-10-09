@@ -99,8 +99,8 @@ func NormalizeMaybeShort(ctx context.Context, hc *http.Client, u *url.URL) (stri
 // cobaltTw — cobalt, ограниченный твиттер-хостами (адаптер для цепочки).
 type cobaltTw struct{ *cobalt.Client }
 
-func (c cobaltTw) Name() string                    { return "cobalt" }
-func (c cobaltTw) MatchHost(h string) bool         { return IsTwitterHost(h) }
+func (c cobaltTw) Name() string            { return "cobalt" }
+func (c cobaltTw) MatchHost(h string) bool { return IsTwitterHost(h) }
 func (c cobaltTw) Resolve(ctx context.Context, u *url.URL) (*media.ResolveResult, error) {
 	return c.Client.Resolve(ctx, u.String())
 }

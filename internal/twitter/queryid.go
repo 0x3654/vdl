@@ -19,13 +19,13 @@ import (
 // Известные queryId (fallback). Источники: dumbtests (2026-04, рабочие),
 // @steipete/bird 0.8.0 (2026-01). При 404 — авторефреш из бандлов x.com.
 var fallbackIDs = map[string][]string{
-	"UserByScreenName":    {"KybxDj9RrADIITXlGG8kpw", "G3KGOASz96M-Qu0nwmGXNg"},
-	"UserTweets":          {"OeFjWKHutsuyWXZGmLr02A", "E3opETHurmVJflFsUBVuUQ"},
+	"UserByScreenName":     {"KybxDj9RrADIITXlGG8kpw", "G3KGOASz96M-Qu0nwmGXNg"},
+	"UserTweets":           {"OeFjWKHutsuyWXZGmLr02A", "E3opETHurmVJflFsUBVuUQ"},
 	"UserTweetsAndReplies": {"-4Ujf5pYzDdr_qY8qxgF9A"},
-	"Bookmarks":           {"RV1g3b8n_SGOHwkqKYSCFw", "tmd4ifV8RHltzn8ymGg1aw"},
-	"Likes":               {"o000A_Cp4JPOihhbeEgi0g", "ETJflBunfqNa1uE1mBPCaw"},
-	"SearchTimeline":      {"KPSo2_UWdOMpPJhfT1Qg", "6AAys3t42mosm_yTI_QENg"},
-	"TweetDetail":         {"FyR-GrebyjdkRoW1z6uCgQ", "_NvJCnIjOW__EP5-RF197A"},
+	"Bookmarks":            {"RV1g3b8n_SGOHwkqKYSCFw", "tmd4ifV8RHltzn8ymGg1aw"},
+	"Likes":                {"o000A_Cp4JPOihhbeEgi0g", "ETJflBunfqNa1uE1mBPCaw"},
+	"SearchTimeline":       {"KPSo2_UWdOMpPJhfT1Qg", "6AAys3t42mosm_yTI_QENg"},
+	"TweetDetail":          {"FyR-GrebyjdkRoW1z6uCgQ", "_NvJCnIjOW__EP5-RF197A"},
 }
 
 // Дополнительные кандидаты из старых ревизий (пробуются после основных).
@@ -66,7 +66,7 @@ func OpenQueryIDs(path string) *QueryIDCache {
 		return c
 	}
 	var f struct {
-		FetchedAt float64          `json:"fetchedAt"`
+		FetchedAt float64           `json:"fetchedAt"`
 		IDs       map[string]string `json:"ids"`
 	}
 	if json.Unmarshal(raw, &f) == nil && len(f.IDs) > 0 {

@@ -17,12 +17,12 @@ import (
 
 // gqlTestEnv — фейковый x.com: и API, и страницы discovery, и бандлы.
 type gqlTestEnv struct {
-	srv     *httptest.Server
-	store   *store.Store
-	ids     *QueryIDCache
-	gql     *GQLClient
+	srv      *httptest.Server
+	store    *store.Store
+	ids      *QueryIDCache
+	gql      *GQLClient
 	notified []string
-	mu      sync.Mutex
+	mu       sync.Mutex
 }
 
 func newGQLTestEnv(t *testing.T, handler http.HandlerFunc, accounts ...store.Account) *gqlTestEnv {
